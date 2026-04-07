@@ -77,14 +77,17 @@ app.innerHTML = `
       </section>
     </div>
     <section class="trainer-panel hidden" id="trainerPanel">
-      <div class="target-label">Target</div>
-      <div class="target-note" id="targetNote">E4</div>
+      <div class="trainer-target-wrap">
+        <div class="target-label">Target</div>
+        <div class="target-note" id="targetNote">E4</div>
+      </div>
       <div class="progress-ring-wrap">
         <svg class="progress-ring" width="60" height="60" viewBox="0 0 60 60">
           <circle class="progress-track" cx="30" cy="30" r="24"></circle>
           <circle class="progress-value" id="progressValue" cx="30" cy="30" r="24"></circle>
         </svg>
       </div>
+      <ul class="trainer-queue" id="trainerQueue"></ul>
     </section>
     <section class="main-display" id="mainDisplay">
       <div class="note-label" id="noteLabel">--</div>
@@ -125,6 +128,7 @@ const ui = createTunerDisplay({
   trainerPanel: document.querySelector("#trainerPanel"),
   targetNote: document.querySelector("#targetNote"),
   progressValue: document.querySelector("#progressValue"),
+  trainerQueue: document.querySelector("#trainerQueue"),
   statusLine: document.querySelector("#statusLine"),
 });
 
@@ -215,10 +219,16 @@ function rebuildTrainer(scaleKey) {
 
 function syncTrainerTargetUi() {
   const targetMidi = trainer.getCurrentTarget();
+  const trainerState = trainer.getState();
+  const trainerQueue = trainerState.sequence.map((midi, index) => ({
+    label: midiToUiLabel(midi),
+    isCurrent: index === trainerState.currentIndex,
+  }));
   ui.setTarget({
     label: midiToUiLabel(targetMidi),
     progress: 0,
   });
+  ui.setTrainerQueue(trainerQueue);
   ui.setScaleEdgeLabels({
     leftLabel: midiToUiLabel(targetMidi - 1),
     rightLabel: midiToUiLabel(targetMidi + 1),
@@ -379,22 +389,31 @@ connectButton.addEventListener("click", async () => {
         const currentLabel = `${formatNoteName(current.name, notation)}${current.octave}`;
 
         if (mode === "trainer") {
-          const targetMidi = trainer.getCurrentTarget();
-          const targetLabel = noteLabelFromMidi(targetMidi);
-          const targetLabelText = `${formatNoteName(targetLabel.name, notation)}${targetLabel.octave}`;
+          const expectedMidi = trainer.getCurrentTarget();
+          const expectedTarget = noteLabelFromMidi(expectedMidi);
           ui.setScaleEdgeLabels({
-            leftLabel: midiToUiLabel(targetMidi - 1),
-            rightLabel: midiToUiLabel(targetMidi + 1),
+            leftLabel: midiToUiLabel(expectedMidi - 1),
+            rightLabel: midiToUiLabel(expectedMidi + 1),
           });
-          const againstTarget = current.midiNumber === targetMidi;
-          const targetCents = againstTarget ? current.centsOffset : current.midiNumber < targetMidi ? -50 : 50;
+          const againstTarget = current.midiNumber === expectedMidi;
+          const targetCents = againstTarget ? current.centsOffset : current.midiNumber < expectedMidi ? -50 : 50;
           const result = trainer.update({
             isOnTargetNote: againstTarget,
             centsOffset: targetCents,
           });
+          const targetMidi = trainer.getCurrentTarget();
+          const targetLabel = noteLabelFromMidi(targetMidi);
+          const targetLabelText = `${formatNoteName(targetLabel.name, notation)}${targetLabel.octave}`;
+          const trainerState = trainer.getState();
+          ui.setTrainerQueue(
+            trainerState.sequence.map((midi, index) => ({
+              label: midiToUiLabel(midi),
+              isCurrent: index === trainerState.currentIndex,
+            }))
+          );
           ui.setTarget({
             label: targetLabelText,
-            progress: result.progress,
+            progress: result.advanced ? 0 : result.progress,
           });
           ui.renderDetection({
             noteLabel: currentLabel,

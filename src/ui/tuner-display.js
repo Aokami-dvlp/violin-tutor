@@ -19,6 +19,19 @@ export function createTunerDisplay(elements) {
       elements.leftEdgeNote.textContent = leftLabel;
       elements.rightEdgeNote.textContent = rightLabel;
     },
+    setTrainerQueue(items) {
+      if (!elements.trainerQueue) return;
+      elements.trainerQueue.innerHTML = items
+        .map(
+          (item) => `
+            <li class="trainer-queue-item${item.isCurrent ? " is-current" : ""}">
+              <span class="trainer-queue-dot"></span>
+              <span class="trainer-queue-label">${item.label}</span>
+            </li>
+          `
+        )
+        .join("");
+    },
     setIdle() {
       elements.appShell.classList.add("idle");
       elements.noteLabel.textContent = "--";

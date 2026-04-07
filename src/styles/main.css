@@ -26,6 +26,8 @@ body {
 #layout-root {
   min-height: 100vh;
   display: flex;
+  width: 100%;
+  overflow: hidden;
 }
 
 .app-shell {
@@ -173,6 +175,12 @@ input[type="number"] {
   align-items: center;
   gap: 18px;
   margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.trainer-target-wrap {
+  display: grid;
+  gap: 4px;
 }
 
 .target-label {
@@ -201,6 +209,47 @@ input[type="number"] {
   transform: rotate(-90deg);
   transform-origin: 50% 50%;
   transition: stroke-dashoffset 120ms linear;
+}
+
+.trainer-queue {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+}
+
+.trainer-queue-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.78;
+  white-space: nowrap;
+}
+
+.trainer-queue-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #64748b;
+  background: #1e293b;
+  flex: 0 0 auto;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.trainer-queue-label {
+  font-size: 12px;
+}
+
+.trainer-queue-item.is-current {
+  opacity: 1;
+}
+
+.trainer-queue-item.is-current .trainer-queue-dot {
+  background: #22c55e;
+  border-color: #22c55e;
 }
 
 .main-display {

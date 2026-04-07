@@ -6,6 +6,12 @@ export function createTrainerMode({ sequence, toleranceCents, holdMs }) {
     getCurrentTarget() {
       return sequence[currentIndex];
     },
+    getState() {
+      return {
+        sequence: [...sequence],
+        currentIndex,
+      };
+    },
     resetHold() {
       holdStart = null;
     },
