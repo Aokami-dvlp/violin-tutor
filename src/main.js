@@ -200,7 +200,7 @@ const fingerboardContainer = document.querySelector("#fingerboard-sidebar");
 initFingerboard(fingerboardContainer);
 setFingerboardMode(mode);
 setFingerboardNotation(notation);
-setFingeringVisible(false);
+setFingeringVisible(mode === "trainer");
 
 function midiToUiLabel(midiNumber) {
   const note = noteLabelFromMidi(midiNumber);
@@ -239,6 +239,7 @@ modeToggle.addEventListener("change", () => {
   mode = modeToggle.checked ? "trainer" : "free";
   ui.setTrainerVisible(mode === "trainer");
   setFingerboardMode(mode);
+  setFingeringVisible(mode === "trainer");
   if (mode === "trainer") {
     syncTrainerTargetUi();
     const targetMidi = trainer.getCurrentTarget();
