@@ -1,4 +1,5 @@
 import { getAudioConstraints } from "./device-manager.js";
+import workletUrl from "./pitch-worklet.js?worker&url";
 
 export async function createPitchEngine({
   selectedDeviceId,
@@ -20,7 +21,6 @@ export async function createPitchEngine({
     }`
   );
   const context = new AudioContext({ sampleRate: 44100 });
-  const workletUrl = new URL("./pitch-worklet.js", import.meta.url);
   await context.audioWorklet.addModule(workletUrl);
 
   const source = context.createMediaStreamSource(stream);

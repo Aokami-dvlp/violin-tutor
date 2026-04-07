@@ -1,4 +1,4 @@
-import aubio from "aubiojs";
+import aubio from "aubiojs/build/aubio.esm.js";
 
 const BUFFER_SIZE = 4096;
 const HOP_SIZE = 512;
