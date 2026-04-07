@@ -89,7 +89,8 @@
   letter-spacing: 0.01em;
   display: grid;
   place-items: center;
-  padding: 2px 1px;
+  min-height: 42px;
+  padding: 6px 2px;
   text-align: center;
 }
 
