@@ -211,6 +211,12 @@ input[type="number"] {
   transition: stroke-dashoffset 120ms linear;
 }
 
+.trainer-timing-label {
+  font-size: 12px;
+  opacity: 0.82;
+  white-space: nowrap;
+}
+
 .trainer-queue {
   list-style: none;
   display: flex;

@@ -102,6 +102,7 @@ app.innerHTML = `
           <circle class="progress-value" id="progressValue" cx="30" cy="30" r="24"></circle>
         </svg>
       </div>
+      <div class="trainer-timing-label" id="trainerTimingLabel"></div>
       <ul class="trainer-queue" id="trainerQueue"></ul>
     </section>
     <section class="main-display" id="mainDisplay">
@@ -143,6 +144,7 @@ const ui = createTunerDisplay({
   trainerPanel: document.querySelector("#trainerPanel"),
   targetNote: document.querySelector("#targetNote"),
   progressValue: document.querySelector("#progressValue"),
+  trainerTimingLabel: document.querySelector("#trainerTimingLabel"),
   trainerQueue: document.querySelector("#trainerQueue"),
   statusLine: document.querySelector("#statusLine"),
 });
@@ -208,6 +210,7 @@ modeToggle.checked = mode === "trainer";
 trainerScaleSelect.value = trainerScale;
 trainerDirectionToggle.checked = trainerDirection === "updown";
 trainerHoldSelect.value = String(trainerHoldQuarterBeats);
+syncTrainerTimingLabel();
 
 function openSettings() {
   settingsModal.classList.remove("hidden");
@@ -236,6 +239,11 @@ function rebuildTrainer(scaleKey) {
   trainerScale = scaleKey;
   localStorage.setItem("violinTutor.trainerScale", trainerScale);
   recreateTrainer();
+}
+
+function syncTrainerTimingLabel() {
+  const opt = TRAINER_HOLD_OPTIONS.find((o) => o.beats === trainerHoldQuarterBeats);
+  ui.setTrainerTimingLabel(`${opt?.label ?? "1/4 (1 tempo)"} · ${TRAINER_BPM} BPM (${TRAINER_TIME_SIGNATURE})`);
 }
 
 function syncTrainerTargetUi() {
@@ -349,6 +357,7 @@ trainerHoldSelect.addEventListener("change", () => {
   trainerHoldQuarterBeats = normalizeTrainerHoldQuarterBeats(trainerHoldSelect.value);
   localStorage.setItem("violinTutor.trainerHoldQuarterBeats", String(trainerHoldQuarterBeats));
   recreateTrainer();
+  syncTrainerTimingLabel();
   if (mode === "trainer") {
     syncTrainerTargetUi();
     const targetMidi = trainer.getCurrentTarget();

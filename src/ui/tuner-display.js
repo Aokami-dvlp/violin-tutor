@@ -10,6 +10,10 @@ export function createTunerDisplay(elements) {
     setTrainerVisible(visible) {
       elements.trainerPanel.classList.toggle("hidden", !visible);
     },
+    setTrainerTimingLabel(label) {
+      if (!elements.trainerTimingLabel) return;
+      elements.trainerTimingLabel.textContent = label;
+    },
     setTarget({ label, progress }) {
       elements.targetNote.textContent = label;
       const offset = circumference * (1 - progress);
