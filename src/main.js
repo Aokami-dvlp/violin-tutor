@@ -9,6 +9,13 @@ import {
   isValidDetection,
   noteLabelFromMidi,
 } from "./music/note-utils.js";
+import {
+  holdMsForQuarterBeats,
+  normalizeTrainerHoldQuarterBeats,
+  TRAINER_BPM,
+  TRAINER_HOLD_OPTIONS,
+  TRAINER_TIME_SIGNATURE,
+} from "./music/trainer-timing.js";
 import { createTrainerMode } from "./ui/trainer-mode.js";
 import {
   initFingerboard,
@@ -72,6 +79,14 @@ app.innerHTML = `
             <span>Asc</span>
             <input id="trainerDirectionToggle" class="switch-input" type="checkbox" />
             <span>Andata+Ritorno</span>
+          </label>
+          <label class="control">
+            <span>Tenuta (4/4, ${TRAINER_BPM} BPM)</span>
+            <select id="trainerHoldSelect">
+              <option value="1">1/4 (1 tempo)</option>
+              <option value="2">2/4 (2 tempi)</option>
+              <option value="4">4/4 (4 tempi)</option>
+            </select>
           </label>
         </div>
       </section>
@@ -154,6 +169,7 @@ const closeSettingsButton = document.querySelector("#closeSettingsButton");
 const settingsModal = document.querySelector("#settingsModal");
 const settingsBackdrop = document.querySelector("#settingsBackdrop");
 const trainerDirectionToggle = document.querySelector("#trainerDirectionToggle");
+const trainerHoldSelect = document.querySelector("#trainerHoldSelect");
 
 let mode = "free";
 let notation = localStorage.getItem("violinTutor.notation") ?? "italian";
@@ -161,6 +177,9 @@ let referenceHz = Number(localStorage.getItem("violinTutor.a4") ?? 440);
 let calibrationCents = Number(localStorage.getItem("violinTutor.calibrationCents") ?? 0);
 let trainerScale = localStorage.getItem("violinTutor.trainerScale") ?? "g";
 let trainerDirection = localStorage.getItem("violinTutor.trainerDirection") ?? "asc";
+let trainerHoldQuarterBeats = normalizeTrainerHoldQuarterBeats(
+  localStorage.getItem("violinTutor.trainerHoldQuarterBeats")
+);
 let engine = null;
 
 function buildTrainerSequence(scaleKey, direction) {
@@ -171,11 +190,16 @@ function buildTrainerSequence(scaleKey, direction) {
   return asc;
 }
 
-let trainer = createTrainerMode({
-  sequence: buildTrainerSequence(trainerScale, trainerDirection),
-  toleranceCents: 15,
-  holdMs: 1500,
-});
+function recreateTrainer() {
+  trainer = createTrainerMode({
+    sequence: buildTrainerSequence(trainerScale, trainerDirection),
+    toleranceCents: 15,
+    holdMs: holdMsForQuarterBeats(trainerHoldQuarterBeats),
+  });
+}
+
+let trainer;
+recreateTrainer();
 
 notationToggle.checked = notation === "italian";
 a4Input.value = String(referenceHz);
@@ -183,6 +207,7 @@ calibrationInput.value = String(calibrationCents);
 modeToggle.checked = mode === "trainer";
 trainerScaleSelect.value = trainerScale;
 trainerDirectionToggle.checked = trainerDirection === "updown";
+trainerHoldSelect.value = String(trainerHoldQuarterBeats);
 
 function openSettings() {
   settingsModal.classList.remove("hidden");
@@ -210,11 +235,7 @@ function midiToUiLabel(midiNumber) {
 function rebuildTrainer(scaleKey) {
   trainerScale = scaleKey;
   localStorage.setItem("violinTutor.trainerScale", trainerScale);
-  trainer = createTrainerMode({
-    sequence: buildTrainerSequence(trainerScale, trainerDirection),
-    toleranceCents: 15,
-    holdMs: 1500,
-  });
+  recreateTrainer();
 }
 
 function syncTrainerTargetUi() {
@@ -321,6 +342,25 @@ trainerDirectionToggle.addEventListener("change", () => {
     trainerDirection === "updown"
       ? "Trainer in modalita andata+ritorno."
       : "Trainer in modalita ascendente."
+  );
+});
+
+trainerHoldSelect.addEventListener("change", () => {
+  trainerHoldQuarterBeats = normalizeTrainerHoldQuarterBeats(trainerHoldSelect.value);
+  localStorage.setItem("violinTutor.trainerHoldQuarterBeats", String(trainerHoldQuarterBeats));
+  recreateTrainer();
+  if (mode === "trainer") {
+    syncTrainerTargetUi();
+    const targetMidi = trainer.getCurrentTarget();
+    const target = noteLabelFromMidi(targetMidi);
+    updateFingerboard({
+      detectedNote: null,
+      targetNote: { ...target, midiNumber: targetMidi },
+    });
+  }
+  const opt = TRAINER_HOLD_OPTIONS.find((o) => o.beats === trainerHoldQuarterBeats);
+  ui.setStatus(
+    `Tenuta ${opt?.label ?? ""} · ${TRAINER_BPM} BPM (${TRAINER_TIME_SIGNATURE}).`
   );
 });
 
